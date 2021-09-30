@@ -23,6 +23,8 @@ const removeUser = (id) => {
     if (index !== -1) {
         return users.splice(index, 1)[0];
     }
+
+    return { error: 'No user found' };
 };
 
 const getUser = (id) => users.find((user) => user.id === id);
