@@ -4,7 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const router = require('./router');
 
-const { addUser, removeUser, getUser, getUserInRoom } = require('./users');
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./users');
 
 const PORT = process.env.PORT || 5000;
 
@@ -24,8 +24,9 @@ app.use(router);
 
 io.on('connection', (socket) => {
     // joining of room and admin message
-    socket.on('join', (name, room, callback) => {
+    socket.on('join', ({ name, room }, callback) => {
         const { error, user } = addUser({ id: socket.id, name, room });
+        // console.log(user);
 
         if (error) return callback(error);
 
@@ -40,20 +41,34 @@ io.on('connection', (socket) => {
 
         socket.join(user.room);
 
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room),
+        });
+
         callback();
     });
 
-    // user messages received from fontend
+    // user messages received from frontend
     socket.on('sendMessage', (message, callback) => {
         const user = getUser(socket.id);
 
         io.to(user.room).emit('message', { user: user.name, text: message });
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room),
+        });
 
         callback();
     });
 
     socket.on('disconnect', () => {
-        console.log('User has just disconnected');
+        const user = removeUser(socket.id);
+
+        io.to(user.room).emit('message', {
+            user: 'admin',
+            text: `${user} has left the room`,
+        });
     });
 });
 
