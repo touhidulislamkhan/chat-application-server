@@ -15,7 +15,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = socketio(server, {
     cors: {
-        origin: 'https://chat-application-d2e12.web.app/',
+        origin: 'https://chat-application-d2e12.web.app',
         methods: ['GET', 'POST'],
     },
 });
